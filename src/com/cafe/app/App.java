@@ -61,7 +61,14 @@ public class App {
                     System.out.println("\nIngresa toppings separados por coma (o vacío):");
                     mediator.listToppings().forEach(t -> System.out.println("- " + t.getName()));
                     System.out.print("> ");
+                    String toppingsLine = scanner.nextLine().trim();
                     List<String> toppingNames = new ArrayList<>();
+                    if (!toppingsLine.isEmpty()) {
+                        for (String part : toppingsLine.split(",")) {
+                            String tName = part.trim();
+                            if (!tName.isEmpty()) toppingNames.add(tName);
+                        }
+                    }
                     try {
                         Order order = mediator.createOrder(currentUser, coffeeName, sizeName, toppingNames);
                         double price = mediator.priceOrder(order);
