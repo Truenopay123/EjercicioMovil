@@ -1,9 +1,8 @@
 package com.cafe.mediator;
 
 import com.cafe.catalog.Catalog;
-import com.cafe.catalog.UserRegistry;
+import com.cafe.catalog.UserRegistryProxy;
 import com.cafe.model.*;
-import com.cafe.pricing.PricingServiceProxy;
 import com.cafe.pricing.RealPricingService;
 
 import java.util.ArrayList;
@@ -12,15 +11,16 @@ import java.util.List;
 /**
  * Patrón Mediator:
  * - Centraliza y coordina la interacción entre subsistemas: catálogo (Singleton),
- *   registro de usuarios (Singleton) y precios (Proxy sobre el servicio real).
+ *   registro de usuarios (Singleton con Proxy) y precios (servicio real).
  * - Reduce el acoplamiento: la aplicación cliente (consola) solo habla con el Mediator.
  */
 public class CafeMediator {
     // Dependencias internas. Nótese que Catalog y UserRegistry son Singletons.
     private final Catalog catalog = Catalog.getInstance();
-    private final UserRegistry registry = UserRegistry.getInstance();
-    // El cálculo de precios pasa por un Proxy que envuelve al servicio real.
-    private final PricingServiceProxy pricing = new PricingServiceProxy(new RealPricingService());
+    // Usamos un Proxy para el registro de usuarios (validaciones, prevención duplicados)
+    private final UserRegistryProxy registry = new UserRegistryProxy(com.cafe.catalog.UserRegistry.getInstance());
+    // Cálculo de precios usa directamente el servicio real.
+    private final RealPricingService pricing = new RealPricingService();
 
     // Operación de alto nivel expuesta al cliente: el Mediator delega y coordina.
     public User registerUser(String name, String email) {
@@ -43,12 +43,12 @@ public class CafeMediator {
             }
         }
         if (coffee == null || size == null) {
-            throw new IllegalArgumentException("Café o tamaño no existe en el catálogo");
+            throw new IllegalArgumentException("Cafe o tamaño no existe en el catalogo");
         }
         return new Order(user, coffee, size, selected);
     }
 
-    // Precio final: el Mediator orquesta el uso del Proxy de precios.
+    // Precio final: el Mediator usa el servicio de precios real.
     public double priceOrder(Order order) {
         return pricing.calculatePrice(order);
     }

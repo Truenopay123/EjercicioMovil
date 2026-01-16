@@ -4,17 +4,27 @@ import com.cafe.mediator.CafeMediator;
 import com.cafe.model.Order;
 import com.cafe.model.User;
 
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class App {
-    private static final Scanner scanner = new Scanner(System.in);
+    private static final Scanner scanner = new Scanner(new InputStreamReader(System.in, StandardCharsets.UTF_8));
 
     public static void main(String[] args) {
+        // Asegurar salida UTF-8 para que la consola muestre acentos y ñ correctamente
+        try {
+            System.setOut(new PrintStream(System.out, true, "UTF-8"));
+            System.setErr(new PrintStream(System.err, true, "UTF-8"));
+        } catch (UnsupportedEncodingException ignored) { }
+
         // La app cliente solo interactúa con el Mediator.
         // El Mediator coordina el uso del Catálogo y del Registro (ambos Singletons)
-        // y del servicio de Precios a través de un Proxy.
+        // y del servicio de Precios.
         CafeMediator mediator = new CafeMediator();
         User currentUser = null;
 
@@ -40,7 +50,7 @@ public class App {
                     System.out.println("Registrado: " + currentUser);
                     break;
                 case "2":
-                    System.out.println("\nCafés:");
+                    System.out.println("\nCafes:");
                     mediator.listCoffees().forEach(c -> System.out.println("- " + c));
                     System.out.println("\nTamaños:");
                     mediator.listSizes().forEach(s -> System.out.println("- " + s));
@@ -76,7 +86,7 @@ public class App {
                     try {
                         // El Mediator crea la orden consultando el Catálogo (Singleton)
                         Order order = mediator.createOrder(currentUser, coffeeName, sizeName, toppingNames);
-                        // El precio se calcula vía Proxy: aplica reglas de variabilidad (p.ej. descuento por toppings)
+                        // El precio se calcula por el servicio de precios.
                         double price = mediator.priceOrder(order);
                         System.out.println("\n" + order);
                         System.out.println("Total: $" + String.format("%.2f", price));
@@ -86,7 +96,7 @@ public class App {
                     break;
                 case "4":
                     running = false;
-                    System.out.println("Adiós!");
+                    System.out.println("¡Adiós!");
                     break;
                 default:
                     System.out.println("Opción inválida.");
