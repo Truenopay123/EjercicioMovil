@@ -9,11 +9,20 @@ import com.cafe.pricing.RealPricingService;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Patrón Mediator:
+ * - Centraliza y coordina la interacción entre subsistemas: catálogo (Singleton),
+ *   registro de usuarios (Singleton) y precios (Proxy sobre el servicio real).
+ * - Reduce el acoplamiento: la aplicación cliente (consola) solo habla con el Mediator.
+ */
 public class CafeMediator {
+    // Dependencias internas. Nótese que Catalog y UserRegistry son Singletons.
     private final Catalog catalog = Catalog.getInstance();
     private final UserRegistry registry = UserRegistry.getInstance();
+    // El cálculo de precios pasa por un Proxy que envuelve al servicio real.
     private final PricingServiceProxy pricing = new PricingServiceProxy(new RealPricingService());
 
+    // Operación de alto nivel expuesta al cliente: el Mediator delega y coordina.
     public User registerUser(String name, String email) {
         return registry.register(name, email);
     }
@@ -22,6 +31,7 @@ public class CafeMediator {
     public List<Size> listSizes() { return catalog.getSizes(); }
     public List<Topping> listToppings() { return catalog.getToppings(); }
 
+    // Crea la orden integrando datos de varios subsistemas sin que el cliente los conozca.
     public Order createOrder(User user, String coffeeName, String sizeName, List<String> toppingNames) {
         Coffee coffee = catalog.findCoffee(coffeeName);
         Size size = catalog.findSize(sizeName);
@@ -38,6 +48,7 @@ public class CafeMediator {
         return new Order(user, coffee, size, selected);
     }
 
+    // Precio final: el Mediator orquesta el uso del Proxy de precios.
     public double priceOrder(Order order) {
         return pricing.calculatePrice(order);
     }

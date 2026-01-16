@@ -12,6 +12,9 @@ public class App {
     private static final Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
+        // La app cliente solo interactúa con el Mediator.
+        // El Mediator coordina el uso del Catálogo y del Registro (ambos Singletons)
+        // y del servicio de Precios a través de un Proxy.
         CafeMediator mediator = new CafeMediator();
         User currentUser = null;
 
@@ -32,6 +35,7 @@ public class App {
                     String name = scanner.nextLine().trim();
                     System.out.print("Email: ");
                     String email = scanner.nextLine().trim();
+                    // El Mediator delega el registro al Singleton UserRegistry
                     currentUser = mediator.registerUser(name, email);
                     System.out.println("Registrado: " + currentUser);
                     break;
@@ -70,7 +74,9 @@ public class App {
                         }
                     }
                     try {
+                        // El Mediator crea la orden consultando el Catálogo (Singleton)
                         Order order = mediator.createOrder(currentUser, coffeeName, sizeName, toppingNames);
+                        // El precio se calcula vía Proxy: aplica reglas de variabilidad (p.ej. descuento por toppings)
                         double price = mediator.priceOrder(order);
                         System.out.println("\n" + order);
                         System.out.println("Total: $" + String.format("%.2f", price));

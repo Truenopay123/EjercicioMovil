@@ -2,6 +2,11 @@ package com.cafe.pricing;
 
 import com.cafe.model.Order;
 
+/**
+ * Sujeto real del Proxy:
+ * - Implementa la lógica pura de cálculo sin reglas transversales.
+ * - El Proxy puede envolver esta clase para añadir validaciones o promociones.
+ */
 public class RealPricingService implements PricingService {
     @Override
     public double calculatePrice(Order order) {

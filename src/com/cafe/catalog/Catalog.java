@@ -8,6 +8,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Patrón Singleton (instancia única del catálogo):
+ * - Constructor privado: evita que otros creen instancias.
+ * - Campo estático {@code INSTANCE}: almacena la única instancia.
+ * - Método {@link #getInstance()}: punto de acceso global y controlado.
+ * - Aquí se usa sincronización simple para inicialización perezosa (lazy).
+ */
 public class Catalog {
     private static Catalog INSTANCE;
 
@@ -15,6 +22,7 @@ public class Catalog {
     private final List<Size> sizes = new ArrayList<>();
     private final List<Topping> toppings = new ArrayList<>();
 
+    // Constructor privado: impide new Catalog() fuera de esta clase.
     private Catalog() {
         // Cafés con precio base (para tamaño pequeño)
         coffees.add(new Coffee("Americano", 2.00));
@@ -33,6 +41,8 @@ public class Catalog {
         toppings.add(new Topping("Leche de almendra", 0.60));
     }
 
+    // Punto de acceso global con inicialización perezosa.
+    // synchronized garantiza seguridad básica en escenarios concurrentes.
     public static synchronized Catalog getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new Catalog();
