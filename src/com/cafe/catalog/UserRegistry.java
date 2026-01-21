@@ -2,8 +2,6 @@ package com.cafe.catalog;
 
 import com.cafe.model.User;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -13,10 +11,12 @@ import java.util.Map;
  */
 public class UserRegistry {
     private static UserRegistry INSTANCE;
-    private final Map<String, User> usersByEmail = new HashMap<>();
+    private final UserRepository repository;
 
     // Constructor privado: no se puede instanciar desde fuera.
-    private UserRegistry() {}
+    private UserRegistry() {
+        this.repository = new InMemoryUserRepository();
+    }
 
     // Acceso global a la única instancia.
     public static synchronized UserRegistry getInstance() {
@@ -26,13 +26,13 @@ public class UserRegistry {
 
     public User register(String name, String email) {
         User user = new User(name, email);
-        usersByEmail.put(email.toLowerCase(), user);
+        repository.save(user);
         return user;
     }
 
     public User findByEmail(String email) {
-        return usersByEmail.get(email.toLowerCase());
+        return repository.findByEmail(email);
     }
 
-    public Map<String, User> getAll() { return Collections.unmodifiableMap(usersByEmail); }
+    public Map<String, User> getAll() { return repository.findAll(); }
 }
