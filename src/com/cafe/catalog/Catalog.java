@@ -1,6 +1,7 @@
 package com.cafe.catalog;
 
 import com.cafe.model.Coffee;
+import com.cafe.model.Food;
 import com.cafe.model.Size;
 import com.cafe.model.Topping;
 
@@ -19,6 +20,7 @@ public class Catalog {
     private static Catalog INSTANCE;
 
     private final List<Coffee> coffees = new ArrayList<>();
+    private final List<Food> foods = new ArrayList<>();
     private final List<Size> sizes = new ArrayList<>();
     private final List<Topping> toppings = new ArrayList<>();
 
@@ -28,6 +30,11 @@ public class Catalog {
         coffees.add(new Coffee("Americano", 2.00));
         coffees.add(new Coffee("Latte", 2.50));
         coffees.add(new Coffee("Capuccino", 2.80));
+
+        // Comida con precio unitario
+        foods.add(new Food("Sandwich", 3.50));
+        foods.add(new Food("Muffin", 2.20));
+        foods.add(new Food("Cookie", 1.50));
 
         // Tamaños con multiplicador
         sizes.add(new Size("Pequeño", 1.00));
@@ -51,11 +58,16 @@ public class Catalog {
     }
 
     public List<Coffee> getCoffees() { return Collections.unmodifiableList(coffees); }
+    public List<Food> getFoods() { return Collections.unmodifiableList(foods); }
     public List<Size> getSizes() { return Collections.unmodifiableList(sizes); }
     public List<Topping> getToppings() { return Collections.unmodifiableList(toppings); }
 
     public Coffee findCoffee(String name) {
         return coffees.stream().filter(c -> c.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
+    }
+
+    public Food findFood(String name) {
+        return foods.stream().filter(f -> f.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
     }
 
     public Size findSize(String name) {

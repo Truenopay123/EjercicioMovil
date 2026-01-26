@@ -1,5 +1,6 @@
 package com.cafe.pricing;
 
+import com.cafe.model.FoodOrder;
 import com.cafe.model.Order;
 
 /**
@@ -14,6 +15,12 @@ public class RealPricingService implements PricingService {
         double sizeMultiplier = order.getSize().getMultiplier();
         double toppingsSum = order.getToppings().stream().mapToDouble(t -> t.getPrice()).sum();
         double total = base * sizeMultiplier + toppingsSum;
+        return round2(total);
+    }
+
+    @Override
+    public double calculatePrice(FoodOrder order) {
+        double total = order.getFood().getPrice() * order.getQuantity();
         return round2(total);
     }
 

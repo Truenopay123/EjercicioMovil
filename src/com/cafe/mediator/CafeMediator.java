@@ -27,11 +27,15 @@ public class CafeMediator {
         return registry.register(name, email);
     }
 
+    // Catálogo café
     public List<Coffee> listCoffees() { return catalog.getCoffees(); }
     public List<Size> listSizes() { return catalog.getSizes(); }
     public List<Topping> listToppings() { return catalog.getToppings(); }
 
-    // Crea la orden integrando datos de varios subsistemas sin que el cliente los conozca.
+    // Catálogo comida
+    public List<Food> listFoods() { return catalog.getFoods(); }
+
+    // Crea orden de café
     public Order createOrder(User user, String coffeeName, String sizeName, List<String> toppingNames) {
         Coffee coffee = catalog.findCoffee(coffeeName);
         Size size = catalog.findSize(sizeName);
@@ -48,8 +52,18 @@ public class CafeMediator {
         return new Order(user, coffee, size, selected);
     }
 
-    // Precio final: el Mediator usa el servicio de precios real.
-    public double priceOrder(Order order) {
-        return pricing.calculatePrice(order);
+    // Crea orden de comida
+    public FoodOrder createFoodOrder(User user, String foodName, int quantity) {
+        Food food = catalog.findFood(foodName);
+        if (food == null) {
+            throw new IllegalArgumentException("La comida no existe en el catalogo");
+        }
+        return new FoodOrder(user, food, quantity);
     }
+
+    // Precio final café
+    public double priceOrder(Order order) { return pricing.calculatePrice(order); }
+
+    // Precio final comida
+    public double priceOrder(FoodOrder order) { return pricing.calculatePrice(order); }
 }

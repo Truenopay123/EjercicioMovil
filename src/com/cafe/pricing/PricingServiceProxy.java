@@ -1,5 +1,6 @@
 package com.cafe.pricing;
 
+import com.cafe.model.FoodOrder;
 import com.cafe.model.Order;
 
 /**
@@ -34,6 +35,16 @@ public class PricingServiceProxy implements PricingService {
         }
 
         // Protección adicional (también típica en un Proxy): nunca permitir totales negativos.
+        if (total < 0) total = 0;
+        return Math.round(total * 100.0) / 100.0;
+    }
+
+    @Override
+    public double calculatePrice(FoodOrder order) {
+        if (order == null || order.getFood() == null || order.getQuantity() <= 0) {
+            throw new IllegalArgumentException("Orden de comida inválida");
+        }
+        double total = real.calculatePrice(order);
         if (total < 0) total = 0;
         return Math.round(total * 100.0) / 100.0;
     }

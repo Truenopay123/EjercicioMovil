@@ -1,5 +1,6 @@
 package com.cafe.app;
 
+import com.cafe.controller.CafeController;
 import com.cafe.mediator.CafeMediator;
 import com.cafe.model.Order;
 import com.cafe.model.User;
@@ -22,19 +23,18 @@ public class App {
             System.setErr(new PrintStream(System.err, true, "UTF-8"));
         } catch (UnsupportedEncodingException ignored) { }
 
-        // La app cliente solo interactúa con el Mediator.
-        // El Mediator coordina el uso del Catálogo y del Registro (ambos Singletons)
-        // y del servicio de Precios.
+        // La vista (CLI) delega la coordinación al Controller (GRASP),
+        // que a su vez usa el Mediator para hablar con los subsistemas.
         CafeMediator mediator = new CafeMediator();
-        User currentUser = null;
+        CafeController controller = new CafeController(mediator);
 
-        System.out.println("=== Café Console ===");
+        System.out.println("=== Café & Comida Console ===");
         boolean running = true;
         while (running) {
-            System.out.println("\nMenú:");
+            System.out.println("\nMenú principal:");
             System.out.println("1) Registrar usuario");
-            System.out.println("2) Ver catálogo");
-            System.out.println("3) Crear orden");
+            System.out.println("2) Comida");
+            System.out.println("3) Café");
             System.out.println("4) Salir");
             System.out.print("Elige opción: ");
             String option = scanner.nextLine().trim();
@@ -45,53 +45,115 @@ public class App {
                     String name = scanner.nextLine().trim();
                     System.out.print("Email: ");
                     String email = scanner.nextLine().trim();
-                    // El Mediator delega el registro al Singleton UserRegistry
-                    currentUser = mediator.registerUser(name, email);
-                    System.out.println("Registrado: " + currentUser);
+                    // El Controller coordina el registro de usuario.
+                    User registered = controller.handleRegisterUser(name, email);
+                    System.out.println("Registrado: " + registered);
                     break;
                 case "2":
-                    System.out.println("\nCafes:");
-                    mediator.listCoffees().forEach(c -> System.out.println("- " + c));
-                    System.out.println("\nTamaños:");
-                    mediator.listSizes().forEach(s -> System.out.println("- " + s));
-                    System.out.println("\nToppings:");
-                    mediator.listToppings().forEach(t -> System.out.println("- " + t));
-                    break;
-                case "3":
-                    if (currentUser == null) {
-                        System.out.println("Primero registra un usuario (opción 1).");
-                        break;
-                    }
-                    System.out.println("\nElige café (escribe el nombre exacto):");
-                    mediator.listCoffees().forEach(c -> System.out.println("- " + c.getName()));
-                    System.out.print("> ");
-                    String coffeeName = scanner.nextLine().trim();
-
-                    System.out.println("\nElige tamaño:");
-                    mediator.listSizes().forEach(s -> System.out.println("- " + s.getName()));
-                    System.out.print("> ");
-                    String sizeName = scanner.nextLine().trim();
-
-                    System.out.println("\nIngresa toppings separados por coma (o vacío):");
-                    mediator.listToppings().forEach(t -> System.out.println("- " + t.getName()));
-                    System.out.print("> ");
-                    String toppingsLine = scanner.nextLine().trim();
-                    List<String> toppingNames = new ArrayList<>();
-                    if (!toppingsLine.isEmpty()) {
-                        for (String part : toppingsLine.split(",")) {
-                            String tName = part.trim();
-                            if (!tName.isEmpty()) toppingNames.add(tName);
+                    // Submenú Comida
+                    boolean foodMenu = true;
+                    while (foodMenu) {
+                        System.out.println("\nComida:");
+                        System.out.println("1) Ver catálogo de comida");
+                        System.out.println("2) Hacer pedido de comida");
+                        System.out.println("3) Volver");
+                        System.out.print("Elige opción: ");
+                        String fOpt = scanner.nextLine().trim();
+                        switch (fOpt) {
+                            case "1":
+                                System.out.println("\nComidas:");
+                                controller.getFoods().forEach(f -> System.out.println("- " + f));
+                                break;
+                            case "2":
+                                if (controller.getCurrentUser() == null) {
+                                    System.out.println("Primero registra un usuario (opción 1).");
+                                    break;
+                                }
+                                System.out.println("\nElige comida (nombre exacto):");
+                                controller.getFoods().forEach(f -> System.out.println("- " + f.getName()));
+                                System.out.print("> ");
+                                String foodName = scanner.nextLine().trim();
+                                System.out.print("Cantidad (entero >=1): ");
+                                String qtyLine = scanner.nextLine().trim();
+                                int qty = 1;
+                                try { qty = Integer.parseInt(qtyLine); } catch (NumberFormatException ignored) {}
+                                try {
+                                    var foodOrder = controller.handleCreateFoodOrder(foodName, qty);
+                                    double price = controller.getTotal(foodOrder);
+                                    System.out.println("\n" + foodOrder);
+                                    System.out.println("Total: $" + String.format("%.2f", price));
+                                } catch (IllegalArgumentException | IllegalStateException ex) {
+                                    System.out.println("Error: " + ex.getMessage());
+                                }
+                                break;
+                            case "3":
+                                foodMenu = false;
+                                break;
+                            default:
+                                System.out.println("Opción inválida.");
                         }
                     }
-                    try {
-                        // El Mediator crea la orden consultando el Catálogo (Singleton)
-                        Order order = mediator.createOrder(currentUser, coffeeName, sizeName, toppingNames);
-                        // El precio se calcula por el servicio de precios.
-                        double price = mediator.priceOrder(order);
-                        System.out.println("\n" + order);
-                        System.out.println("Total: $" + String.format("%.2f", price));
-                    } catch (IllegalArgumentException ex) {
-                        System.out.println("Error: " + ex.getMessage());
+                    break;
+                case "3":
+                    // Submenú Café
+                    boolean coffeeMenu = true;
+                    while (coffeeMenu) {
+                        System.out.println("\nCafé:");
+                        System.out.println("1) Ver catálogo de café");
+                        System.out.println("2) Hacer pedido de café");
+                        System.out.println("3) Volver");
+                        System.out.print("Elige opción: ");
+                        String cOpt = scanner.nextLine().trim();
+                        switch (cOpt) {
+                            case "1":
+                                System.out.println("\nCafes:");
+                                controller.getCoffees().forEach(c -> System.out.println("- " + c));
+                                System.out.println("\nTamaños:");
+                                controller.getSizes().forEach(s -> System.out.println("- " + s));
+                                System.out.println("\nToppings:");
+                                controller.getToppings().forEach(t -> System.out.println("- " + t));
+                                break;
+                            case "2":
+                                if (controller.getCurrentUser() == null) {
+                                    System.out.println("Primero registra un usuario (opción 1).");
+                                    break;
+                                }
+                                System.out.println("\nElige café (nombre exacto):");
+                                controller.getCoffees().forEach(c -> System.out.println("- " + c.getName()));
+                                System.out.print("> ");
+                                String coffeeName = scanner.nextLine().trim();
+
+                                System.out.println("\nElige tamaño:");
+                                controller.getSizes().forEach(s -> System.out.println("- " + s.getName()));
+                                System.out.print("> ");
+                                String sizeName = scanner.nextLine().trim();
+
+                                System.out.println("\nIngresa toppings separados por coma (o vacío):");
+                                controller.getToppings().forEach(t -> System.out.println("- " + t.getName()));
+                                System.out.print("> ");
+                                String toppingsLine = scanner.nextLine().trim();
+                                List<String> toppingNames = new ArrayList<>();
+                                if (!toppingsLine.isEmpty()) {
+                                    for (String part : toppingsLine.split(",")) {
+                                        String tName = part.trim();
+                                        if (!tName.isEmpty()) toppingNames.add(tName);
+                                    }
+                                }
+                                try {
+                                    Order order = controller.handleCreateOrder(coffeeName, sizeName, toppingNames);
+                                    double price = controller.getTotal(order);
+                                    System.out.println("\n" + order);
+                                    System.out.println("Total: $" + String.format("%.2f", price));
+                                } catch (IllegalArgumentException | IllegalStateException ex) {
+                                    System.out.println("Error: " + ex.getMessage());
+                                }
+                                break;
+                            case "3":
+                                coffeeMenu = false;
+                                break;
+                            default:
+                                System.out.println("Opción inválida.");
+                        }
                     }
                     break;
                 case "4":
